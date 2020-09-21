@@ -303,5 +303,6 @@ cat root.txt
 ***
 
 ```
+# Eksploitacja wersja trudniejsza - piszemy prostego eksploita w Pythonie
 
 # Podsumowanie
