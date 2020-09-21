@@ -16,7 +16,7 @@
 title: Zero Trust Blog
 email: thezerotrust@protonmail.com
 description: >- # this means to ignore newlines until "baseurl:"
-  Blog about Cloud Security and other stuff.
+  Blog about Cloud Security, HTB walkthroughs and other stuff.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 
