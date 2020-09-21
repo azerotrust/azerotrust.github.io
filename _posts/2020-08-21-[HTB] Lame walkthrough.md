@@ -56,7 +56,7 @@ Host script results:
 |_  System time: 2020-09-18T11:18:20-04:00
 | smb-security-mode: 
 |   account_used: guest
-|   authentication_level: user
+|   authentication_level: userhiw
 |   challenge_response: supported
 |_  message_signing: disabled (dangerous, but default)
 |_smb2-time: Protocol negotiation failed (SMB2)
@@ -70,9 +70,32 @@ Krótkie wyjaśnienie przełączników:
 * **-sC** - skanowanie z domyślnym zestawem skryptów
 * **-V** - pokaż wersję usług
 
-Jak widzimy na powyższym zrzucie mamy kilka usług: ftp, ssh oraz sambę. SSH raczej możemy odrzucić, rzadko jest to punkt wejścia do maszyny, chyba, że innym sposobem (np. poprzez wykorzystanie dziury w aplikacji webowej) udało się zdobyć poświadczenia do logowania. Zostaje zatem ftp oraz samba. Szybkie wyszukanie w google frazy "vsftpd 2.3.4" prowadzi nas do strony (https://www.rapid7.com/db/modules/exploit/unix/ftp/vsftpd_234_backdoor).
-
+Jak widzimy na powyższym zrzucie mamy kilka usług: ftp, ssh oraz sambę. SSH raczej możemy odrzucić, rzadko jest to punkt wejścia do maszyny, chyba, że innym sposobem (np. poprzez wykorzystanie dziury w aplikacji webowej) udało się zdobyć poświadczenia do logowania. Zostaje zatem ftp oraz samba. Szybkie wyszukanie w google frazy "vsftpd 2.3.4" prowadzi nas do strony (https://www.rapid7.com/db/modules/exploit/unix/ftp/vsftpd_234_backdoor). Według opisu tej podatności do archiwum vsftp został wprowadzony backdoor, który pozwala na wykonanie dowolnego polecenia na systemie z uprawnieniami usługi vsftpd. Czyli mamy podatność typu RCE (Remote Code Execution). Możemy zatem przejść do próby eksploitacji. 
 
 # Eksploitacja wersja łatwa
+
+W pierwszej wersji wykorzystamy narzędzie metasploit, które zawiera gotowy do wykorzystania eksploit. Uruchamiamy metasploita:
+
+```bash
+msfconsole
+                                                  
+ _                                                    _
+/ \    /\         __                         _   __  /_/ __
+| |\  / | _____   \ \           ___   _____ | | /  \ _   \ \
+| | \/| | | ___\ |- -|   /\    / __\ | -__/ | || | || | |- -|
+|_|   | | | _|__  | |_  / -\ __\ \   | |    | | \__/| |  | |_
+      |/  |____/  \___\/ /\ \\___/   \/     \__|    |_\  \___\
+
+
+       =[ metasploit v5.0.88-dev                          ]
++ -- --=[ 2014 exploits - 1097 auxiliary - 343 post       ]
++ -- --=[ 562 payloads - 45 encoders - 10 nops            ]
++ -- --=[ 7 evasion                                       ]
+
+Metasploit tip: Enable verbose logging with set VERBOSE true
+
+msf5 > 
+```
+
 # Eksploitacja wersja pro - piszemy eksploita w Pythonie
 # Podsumowanie
