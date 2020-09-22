@@ -4,8 +4,6 @@ title:  "[HTB] Lame walkthrough"
 tags: htb walktrough pentesting
 ---
 
-# ToC
-{:toc}
 # Intro
 
 Pierwsze walktrough dość już starej maszynki o wdzięcznej nazwie "Lame" na platformie [Hack the box](https://www.hackthebox.eu/). Jeśli nie wiesz czym jest platforma HTB to spieszę z wyjaśnieniem. Platforma HTB to w dużym skrócie serwis, który umożliwia testowanie i rozwijanie umiejętności z zakresu pentestingu. Zabawa polega na zdobyciu dwóch flag: zwykłego użytkownika oraz roota (Administratora dla systemów Windows). Opis całej platformy to temat na oddzielny post. Zatem przejdźmy do "shackowania" naszej pierwszej maszynki.
