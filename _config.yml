@@ -29,10 +29,6 @@ plugins:
 kramdown:
   parse_block_html: true
   
-collections:
-  tags:
-    output: true
-    permalink: tags/:path/
 # Exclude from processing.
 # The following items will not be processed, by default. Create a custom list
 # to override the default setting.
