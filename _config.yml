@@ -28,6 +28,8 @@ plugins:
   
 kramdown:
   parse_block_html: true
+
+show_excerpts: true
   
 # Exclude from processing.
 # The following items will not be processed, by default. Create a custom list
